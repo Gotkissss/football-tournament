@@ -1,58 +1,138 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Football Tournament Manager
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de gestión de torneos de fútbol desarrollado con Laravel 11 y Eloquent ORM. El dominio modela torneos estilo FIFA World Cup y UEFA Champions League, incluyendo equipos, jugadores, partidos, goles, tarjetas y árbitros.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Requisitos
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP 8.2 o superior
+- Composer
+- MySQL 8 o MariaDB 10.5+
+- Laravel 11
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Instalación
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Clonar el repositorio e instalar dependencias:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/Gotkissss/football-tournament.git
+cd football-tournament
+composer install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Copiar el archivo de entorno y generar la clave de la aplicación:
 
-## Contributing
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Editar el archivo `.env` con los datos de la base de datos:
 
-## Code of Conduct
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=football_tournament
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## Base de datos
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Crear la base de datos en MySQL:
 
-## License
+```sql
+CREATE DATABASE football_tournament CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Correr las migraciones:
+
+```bash
+php artisan migrate
+```
+
+Correr los seeders:
+
+```bash
+php artisan db:seed
+```
+
+O ambos en un solo comando:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+---
+
+## Tablas
+
+El sistema cuenta con 13 tablas:
+
+- `confederations` — UEFA, CONMEBOL, CONCACAF, CAF, AFC, OFC
+- `countries` — Países vinculados a una confederación
+- `tournaments` — Mundial, Champions League, Copa América, etc.
+- `stadiums` — Estadios con ciudad, aforo y coordenadas
+- `teams` — Selecciones nacionales y equipos de club
+- `players` — Jugadores con posición y estadísticas
+- `groups` — Grupos A-H dentro de un torneo
+- `group_team` — Tabla pivot con posiciones por grupo
+- `matches` — Partidos con marcador, fase y estadio
+- `goals` — Goles con minuto, tipo y jugador
+- `cards` — Tarjetas amarillas y rojas
+- `referees` — Árbitros principales, asistentes y VAR
+- `match_referee` — Tabla pivot de árbitros por partido
+
+---
+
+## Relaciones implementadas
+
+- `Confederation` tiene muchos `Country` y `Tournament`
+- `Country` pertenece a `Confederation`, tiene muchos `Team`, `Player`, `Stadium` y `Referee`
+- `Team` pertenece a `Country` y `Stadium`, tiene muchos `Player` y pertenece a muchos `Group`
+- `Match` pertenece a `Tournament`, `Group`, `Team` (local y visitante) y `Stadium`, tiene muchos `Goal` y `Card`, y pertenece a muchos `Referee`
+- `Player` pertenece a `Team` y `Country`, tiene muchos `Goal` y `Card`
+
+Todas las relaciones están definidas en ambos modelos involucrados.
+
+---
+
+## Datos generados por el seeder
+
+| Tabla          | Registros    |
+|----------------|--------------|
+| confederations | 6            |
+| countries      | 48           |
+| stadiums       | 120          |
+| tournaments    | 20           |
+| teams          | 200          |
+| players        | 5,000        |
+| referees       | 300          |
+| groups         | 160          |
+| group_team     | 640          |
+| matches        | ~1,580       |
+| goals          | ~3,600       |
+| cards          | ~2,400       |
+| match_referee  | ~4,800       |
+| **Total**      | **+18,000**  |
+
+---
+
+## Consultas Eloquent
+
+Las consultas de demostración se encuentran en `app/Http/Controllers/EloquentQueriesDemo.php` e incluyen:
+
+1. Tabla de posiciones de un grupo ordenada por puntos
+2. Goleadores del torneo usando `withCount` y filtros
+3. Partidos de fase eliminatoria con Eager Loading para evitar el problema N+1
+4. Equipos con mas tarjetas rojas usando relaciones anidadas
+5. Los 5 partidos con mas goles usando `withCount` y ordenamiento
+6. Jugadores sin tarjetas usando `whereDoesntHave`
+
+El uso de Eager Loading en la consulta 3 esta justificado en comentarios dentro del archivo.
